@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<head>
+</head>
+<body>
+<p>Support page for trusted-types-navigation.*.html tests.</p>
+<a id="anchor" href="#">link</a>
+<script>
+  function bounceEventToOpener(e) {
+    const msg = {};
+    for (const field of ["effectiveDirective", "sample", "type"]) {
+      msg[field] = e[field];
+    }
+    msg["uri"] = location.href;
+    window.opener.postMessage(msg, "*");
+  }
+
+  document.addEventListener("DOMContentLoaded", bounceEventToOpener);
+  document.addEventListener("securitypolicyviolation", bounceEventToOpener);
+
+  // We'll use a javascript:-url to navigate to ourselves, so that we can
+  // re-use the messageing mechanisms above. In order to not end up in a loop,
+  // we'll only click if we don't find fragment in the current URL.
+  const anchor = document.getElementById("anchor");
+  anchor.href = "javascript:location.href=\'#abc\'";
+  if (!location.hash) anchor.click();
+</script>
+</body>
+

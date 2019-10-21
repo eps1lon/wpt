@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<head>
+  <script src="/resources/testharness.js"></script>
+  <script src="/resources/testharnessreport.js"></script>
+</head>
+<body>
+<script>
+  function expectMessage(filter) {
+    return new Promise(resolve => {
+      window.addEventListener("message", e => { if (filter(e)) resolve(); });
+    });
+  }
+
+  function expectViolationAsMessage(sample) {
+    const filter = e => (e.data.effectiveDirective == "trusted-types" &&
+                         (!sample || e.data.sample.startsWith(sample)));
+    return new expectMessage(filter);
+  }
+
+  function expectLoadedAsMessage(uri) {
+    const filter = e => (e.data.type == "DOMContentLoaded" &&
+                        (!uri || e.data.uri.endsWith(uri)));
+    return new expectMessage(filter);
+  }
+
+  function openWindow(test, uri) {
+    const win = window.open(uri);
+    test.add_cleanup(_ => win.close());
+  }
+
+  promise_test(t => {
+    openWindow(t, "support/navigation-support.html");
+    return Promise.all([
+      expectLoadedAsMessage("navigation-support.html"),
+      expectViolationAsMessage("Location.href"),
+    ]);
+  }, "Navigate a window with javascript:-urls");
+
+  promise_test(t => {
+    openWindow(t, "support/navigation-report-only-support.html");
+    return Promise.all([
+      expectLoadedAsMessage("navigation-report-only-support.html"),
+      expectLoadedAsMessage("navigation-support.html#bbb"),
+    ]);
+  }, "Navigate a window with javascript:-urls in report-only mode");
+</script>
+</body>
